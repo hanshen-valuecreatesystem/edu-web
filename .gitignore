@@ -5,6 +5,10 @@ speech_cache/
 
 # 版本备份文件（由 version_manager.py 管理）
 versions/*.bak
+versions/*.versions.json
+
+# versions.json（统一在edu-web根目录下）
+!versions.json
 
 # Python缓存
 __pycache__/
