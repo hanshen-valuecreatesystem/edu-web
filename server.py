@@ -17,6 +17,14 @@ from flask import Flask, jsonify, request, send_file, render_template_string
 
 app = Flask(__name__)
 
+# CORS support — allow local HTML files to fetch API
+@app.after_request
+def add_cors(response):
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type"
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
+    return response
+
 # 路径常量
 HERE = Path(__file__).parent.resolve()
 WORD_GAME_DIR = HERE.parent / "英语" / "word-game"
@@ -70,9 +78,9 @@ def api_spelling_speak():
     if not cache_file.exists():
         try:
             result = subprocess.run(
-                ["edge-tts", "--voice", "en-US-JennyNeural",
+                ["edge-tts", "--voice", "en-GB-SoniaNeural",
                  "--text", word, "--write-media", str(cache_file),
-                 "--rate=+0%"],
+                 "--rate=-25%"],
                 capture_output=True, text=True, timeout=30
             )
             if result.returncode != 0:
