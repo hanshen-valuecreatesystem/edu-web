@@ -1,0 +1,21 @@
+# edu-web .gitignore
+
+# 语音缓存（自动生成，无需版本控制）
+speech_cache/
+
+# 版本备份文件（由 version_manager.py 管理）
+versions/*.bak
+
+# Python缓存
+__pycache__/
+*.py[cod]
+*$py.class
+
+# 编辑器
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db

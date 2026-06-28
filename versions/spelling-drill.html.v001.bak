@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Spelling Drill - AI</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,'Microsoft YaHei',sans-serif;background:#1a1a2e;color:#eee;min-height:100vh}
+.main{max-width:700px;margin:0 auto;padding:16px}
+.header{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid #333;margin-bottom:16px}
+.header h1{font-size:18px;color:#FF6B35}
+.nav-btn{background:#333;border:none;color:#999;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:13px}
+.nav-btn:hover{background:#444}
+.panel-box{background:#16213e;border-radius:12px;padding:16px;margin-bottom:12px}
+.panel-box h3{font-size:14px;color:#999;margin-bottom:10px}
+.tags{display:flex;gap:8px;flex-wrap:wrap}
+.tag{background:#333;color:#999;padding:6px 14px;border-radius:20px;cursor:pointer;font-size:13px;border:none}
+.tag.on{background:#FF6B35;color:#fff;font-weight:600}
+.start-btn{display:block;width:100%;padding:14px;background:#FF6B35;color:#fff;border:none;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;margin-top:12px}
+.start-btn:disabled{background:#555;cursor:not-allowed}
+.practice-area,.diagnose-area,.drill-area,.finish-area{display:none}
+.practice-area.show,.diagnose-area.show,.drill-area.show,.finish-area.show{display:block}
+.word-card{background:#16213e;border-radius:16px;padding:24px;margin-bottom:16px;text-align:center}
+.progress{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;font-size:13px;color:#999}
+.progress-bar{flex:1;height:4px;background:#333;border-radius:2px;margin:0 12px;overflow:hidden}
+.progress-bar .fill{height:100%;background:#FF6B35;border-radius:2px;transition:width .3s}
+.cn-hint{font-size:20px;color:#ccc;margin-bottom:8px}
+.speak-btn{background:none;border:1px solid #4fc3f7;color:#4fc3f7;padding:6px 16px;border-radius:6px;cursor:pointer;font-size:13px;margin-bottom:12px}
+.speak-btn:hover{background:#0f3460}
+.speak-btn:disabled{opacity:0.4;cursor:not-allowed}
+.full-input{width:80%;max-width:300px;height:52px;text-align:center;font-size:28px;font-weight:700;border:2px solid #4fc3f7;border-radius:10px;background:#0f3460;color:#fff;outline:none;letter-spacing:4px;text-transform:lowercase}
+.full-input:focus{border-color:#FF6B35}
+.submit-btn{height:52px;padding:0 28px;background:#FF6B35;color:#fff;border:none;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;margin-top:10px}
+.submit-btn:disabled{background:#555;cursor:not-allowed}
+.slot-area{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin:12px 0}
+.slot-box{width:42px;height:50px;text-align:center;font-size:26px;font-weight:700;border:2px solid #FFD166;border-radius:8px;background:#1e2a1a;color:#FFD166;outline:none;text-transform:lowercase}
+.slot-box:focus{border-color:#FF6B35}
+.slot-box.correct{border-color:#00B894;background:#0a2a1a;color:#00B894}
+.slot-box.wrong{border-color:#E17055;background:#2a1a1a}
+.check-btn{height:44px;padding:0 24px;background:#4fc3f7;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;margin-top:8px}
+.check-btn:disabled{background:#555;cursor:not-allowed}
+.feedback{font-size:15px;margin-top:8px;min-height:24px}
+.feedback.good{color:#00B894}
+.feedback.bad{color:#E17055}
+.feedback.info{color:#4fc3f7}
+.next-btn{display:none;margin:12px auto;padding:10px 30px;background:#4fc3f7;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer}
+.next-btn.show{display:inline-block}
+.kb{margin-top:12px}
+.kb-row{display:flex;gap:3px;justify-content:center;margin-bottom:3px}
+.kb-key{width:34px;height:40px;border-radius:6px;border:none;background:#333;color:#eee;font-size:15px;font-weight:600;cursor:pointer}
+.kb-key:hover{background:#444}
+.kb-key:active{transform:scale(.95)}
+.kb-key.sp{background:#2a2a4a;color:#4fc3f7;font-size:13px;width:48px}
+.kb-key.ok{background:#FF6B35;color:#fff}
+/* Diagnose result */
+.diag-card{background:#0f3460;border-radius:12px;padding:16px;margin:12px 0;text-align:left}
+.diag-card .word{font-size:28px;font-weight:700;color:#FF6B35;text-align:center;margin-bottom:8px}
+.diag-card .analysis{font-size:14px;color:#ccc;line-height:1.6;margin-bottom:8px}
+.diag-card .errors{margin:8px 0}
+.diag-card .err-tag{display:inline-block;background:#2a1a1a;color:#E17055;padding:2px 8px;border-radius:4px;font-size:12px;margin:2px}
+/* Stats */
+.stat-row{display:flex;gap:20px;justify-content:center;flex-wrap:wrap;margin:12px 0}
+.stat-box{text-align:center;background:#16213e;padding:12px 20px;border-radius:10px;min-width:80px}
+.stat-box .num{font-size:24px;font-weight:700;color:#FF6B35}
+.stat-box .label{font-size:11px;color:#999;margin-top:2px}
+@media(max-width:480px){
+  .full-input{width:90%;font-size:22px}
+  .slot-box{width:36px;height:42px;font-size:20px}
+  .kb-key{width:28px;height:36px;font-size:13px}
+  .kb-key.sp{width:40px}
+}
+</style>
+</head>
+<body>
+<div class="main" id="setupPanel">
+  <div class="header"><h1>Spelling Drill</h1></div>
+  <div class="panel-box">
+    <h3>Select Units</h3>
+    <div class="tags" id="unitTags"></div>
+  </div>
+  <button class="start-btn" id="startBtn" onclick="startGame()">Start</button>
+</div>
+
+<div class="main practice-area" id="practicePanel">
+  <div class="header">
+    <div><button class="nav-btn" onclick="goSetup()">Back</button></div>
+    <div class="progress">
+      <span id="posLabel">1/10</span>
+      <div class="progress-bar"><div class="fill" id="progFill" style="width:10%"></div></div>
+      <span id="scoreLabel">0</span>
+    </div>
+  </div>
+  <div class="word-card" id="practiceCard">
+    <div class="cn-hint" id="cnHint">word</div>
+    <div><button class="speak-btn" id="speakBtn" onclick="speakWord()">Speak</button></div>
+    <div><input type="text" class="full-input" id="fullInput" autocomplete="off" oninput="onFullIn(this.value)" onkeydown="if(event.key==='Enter')submitFull()"></div>
+    <div><button class="submit-btn" id="submitBtn" onclick="submitFull()">Check</button></div>
+    <div class="feedback" id="fb"></div>
+  </div>
+</div>
+
+<div class="main diagnose-area" id="diagnosePanel">
+  <div class="header">
+    <div><button class="nav-btn" onclick="goSetup()">Back</button></div>
+    <div style="font-size:14px;color:#4fc3f7">Diagnosis</div>
+  </div>
+  <div class="diag-card" id="diagCard"></div>
+  <div class="stat-row">
+    <div class="stat-box"><div class="num" id="correctNum">0</div><div class="label">First Try OK</div></div>
+    <div class="stat-box"><div class="num" id="wrongNum">0</div><div class="label">Need Practice</div></div>
+    <div class="stat-box"><div class="num" id="remainNum">0</div><div class="label">Remaining</div></div>
+  </div>
+  <button class="start-btn" id="drillStartBtn" onclick="startDrills()">Practice Mistakes</button>
+  <button class="start-btn" id="retestBtn" style="background:#4fc3f7;margin-top:8px" onclick="startGame()">Retest All</button>
+  <div id="nextBatchLabel" style="display:none;text-align:center;margin-top:8px;font-size:13px;color:#4fc3f7">Good! Next batch coming up...</div>
+  <button class="start-btn" id="continueBatchBtn" style="display:none;background:#4fc3f7;margin-top:8px" onclick="continueNextBatch()">Continue Next Batch</button>
+</div>
+
+<div class="main drill-area" id="drillPanel">
+  <div class="header">
+    <div><button class="nav-btn" onclick="goSetup()">Back</button></div>
+    <div class="progress">
+      <span id="drillPos">1/10</span>
+      <div class="progress-bar"><div class="fill" id="drillProg" style="width:10%"></div></div>
+    </div>
+  </div>
+  <div class="word-card">
+    <div class="cn-hint" id="drillCn">word</div>
+    <div><button class="speak-btn" id="drillSpeakBtn" onclick="speakWord()">Speak</button></div>
+    <div class="slot-area" id="slotArea"></div>
+    <div class="kb" id="keyboard"></div>
+    <div class="feedback" id="drillFb"></div>
+    <button class="next-btn" id="drillNext" onclick="nextDrill()">Next</button>
+  </div>
+</div>
+
+<div class="main finish-area" id="finishPanel">
+  <div class="word-card">
+    <div style="font-size:64px;margin-bottom:16px" id="finishIcon">🎉</div>
+    <div style="font-size:24px;font-weight:700;margin-bottom:8px" id="finishTitle">Done!</div>
+    <div class="stat-row">
+      <div class="stat-box"><div class="num" id="fCorrect">0</div><div class="label">Correct</div></div>
+      <div class="stat-box"><div class="num" id="fWrong">0</div><div class="label">Fixed</div></div>
+      <div class="stat-box"><div class="num" id="fStill">0</div><div class="label">Still Wrong</div></div>
+    </div>
+    <div style="margin-top:16px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+      <button class="nav-btn" onclick="goSetup()" style="padding:10px 24px;font-size:15px">Back to Menu</button>
+      <button class="start-btn" onclick="startGame()" style="width:auto;padding:10px 24px;display:inline-block">Try Again</button>
+    </div>
+  </div>
+</div>
+
+<div class="main" id="allFinishPanel" style="display:none">
+  <div class="word-card">
+    <div style="font-size:64px;margin-bottom:16px" id="allFinishIcon">🎉</div>
+    <div style="font-size:24px;font-weight:700;margin-bottom:8px" id="allFinishTitle">All Done!</div>
+    <div class="stat-row">
+      <div class="stat-box"><div class="num" id="afCorrect">0</div><div class="label">Total Correct</div></div>
+      <div class="stat-box"><div class="num" id="afWrong">0</div><div class="label">Total Wrong</div></div>
+      <div class="stat-box"><div class="num" id="afStill">0</div><div class="label">Still Wrong</div></div>
+    </div>
+    <div style="margin-top:16px;text-align:center;color:#999;font-size:14px" id="allExtra">Complete all batches to unlock drill practice</div>
+    <div style="margin-top:12px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+      <button class="nav-btn" onclick="goSetup()" style="padding:10px 24px;font-size:15px">Back to Menu</button>
+      <button class="start-btn" onclick="startGame()" style="width:auto;padding:10px 24px;display:inline-block">Restart Test</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================
+   STATE
+   ============================ */
+var UNITS = [
+  {id:'u3',name:'Unit 3 (27)'},{id:'u6',name:'Unit 6 (12)'},{id:'u78',name:'Unit 7-8 (45)'}
+];
+var BATCH_SIZE=6;   // 每批做几个词
+var selectedUnits=['u3','u6','u78'];
+var allWords=[]; var gameWords=[]; var wIdx=0;
+var correctFirst=0; var wrongCount=0;
+var mistakes=[];  // {word,cn,error_positions,attempt}
+var drillWords=[]; var dIdx=0;
+var locked=false;
+var batchStart=0;   // 当前批起始索引
+var totalCorrect=0; var totalWrong=0;
+
+// Slot state
+var slots=[]; var slotValues=[]; var slotAnswer='';
+var currentWord=null; var currentDrill=null;
+
+var API='http://127.0.0.1:5001';
+
+/* ============================
+   SETUP
+   ============================ */
+document.addEventListener('DOMContentLoaded',function(){
+  renderUnits();
+  loadWords();
+});
+
+function renderUnits(){
+  var c=document.getElementById('unitTags'); c.innerHTML='';
+  for(var i=0;i<UNITS.length;i++){
+    var b=document.createElement('button');
+    b.className='tag on'; b.textContent=UNITS[i].name; b.dataset.uid=UNITS[i].id;
+    b.onclick=function(){
+      var uid=this.dataset.uid; var idx=selectedUnits.indexOf(uid);
+      if(idx>=0){selectedUnits.splice(idx,1);this.classList.remove('on');}
+      else{selectedUnits.push(uid);this.classList.add('on');}
+      updateStartBtn();
+    };
+    c.appendChild(b);
+  }
+  updateStartBtn();
+}
+
+function updateStartBtn(){
+  document.getElementById('startBtn').disabled=(selectedUnits.length===0);
+}
+
+async function loadWords(){
+  try{
+    var resp=await fetch(API+'/api/spelling/data');
+    var data=await resp.json();
+    allWords=data;
+  } catch(e){
+    console.log('API unavailable, using inline data');
+    allWords=[]; loadData();
+  }
+}
+
+var ALL_WORDS=[];
+function loadData(){
+  if(typeof DATA_U3 !== 'undefined'){for(var i=0;i<DATA_U3.length;i++)ALL_WORDS.push(DATA_U3[i]);}
+  if(typeof DATA_U6 !== 'undefined'){for(var i=0;i<DATA_U6.length;i++)ALL_WORDS.push(DATA_U6[i]);}
+  if(typeof DATA_U78 !== 'undefined'){for(var i=0;i<DATA_U78.length;i++)ALL_WORDS.push(DATA_U78[i]);}
+}
+
+/* ============================
+   START: Blind Test Phase
+   ============================ */
+function startGame(){
+  // Filter words by selected units
+  gameWords=[];
+  if(allWords.length>0){
+    gameWords=allWords.slice();
+  } else {
+    loadData();
+    gameWords=ALL_WORDS.slice();
+  }
+  shuffle(gameWords);
+  wIdx=0; batchStart=0; totalCorrect=0; totalWrong=0;
+  correctFirst=0; wrongCount=0; mistakes=[];
+  document.getElementById('setupPanel').style.display='none';
+  document.getElementById('practicePanel').classList.add('show');
+  document.getElementById('diagnosePanel').classList.remove('show');
+  document.getElementById('drillPanel').classList.remove('show');
+  document.getElementById('finishPanel').classList.remove('show');
+  loadBlind();
+}
+
+function loadBlind(){
+  if(wIdx>=gameWords.length){showAllDiagnose();return;}
+  // 计算本批范围
+  var batchEnd=Math.min(batchStart+BATCH_SIZE, gameWords.length);
+  // 进度显示：显示本批内的进度
+  var inBatchWIdx=wIdx-batchStart;
+  var batchSize=batchEnd-batchStart;
+  var w=gameWords[wIdx];
+  currentWord=w;
+  document.getElementById('cnHint').textContent=w.cn||'';
+  document.getElementById('fb').textContent=''; document.getElementById('fb').className='feedback';
+  document.getElementById('fullInput').value=''; document.getElementById('fullInput').disabled=false;
+  document.getElementById('submitBtn').disabled=false;
+  locked=false; document.getElementById('fullInput').focus();
+  document.getElementById('posLabel').textContent=(wIdx+1)+'/'+gameWords.length;
+  document.getElementById('progFill').style.width=((wIdx)/gameWords.length*100)+'%';
+  document.getElementById('scoreLabel').textContent=correctFirst;
+  // Auto-speak
+  setTimeout(function(){speakWord();},300);
+}
+
+function onFullIn(v){
+  v=v.toLowerCase().replace(/[^a-z\s]/g,'');
+  document.getElementById('fullInput').value=v;
+}
+
+function submitFull(){
+  if(locked) return;
+  var v=document.getElementById('fullInput').value.toLowerCase().replace(/[^a-z\s]/g,'');
+  if(!v) return;
+  locked=true;
+  document.getElementById('fullInput').disabled=true;
+  document.getElementById('submitBtn').disabled=true;
+  var w=currentWord;
+  var correctWord=w.word.toLowerCase().replace(/[^a-z\s]/g,'');
+
+  if(v===correctWord){
+    correctFirst++;
+    document.getElementById('fb').innerHTML='<b>'+w.word+'</b> Correct!';
+    document.getElementById('fb').className='feedback good';
+    document.getElementById('scoreLabel').textContent=correctFirst;
+    wIdx++;
+    // 检查是否到了本批末尾
+    var batchEnd=Math.min(batchStart+BATCH_SIZE, gameWords.length);
+    if(wIdx>=batchEnd && wIdx<gameWords.length){
+      // 本批完成，显示诊断
+      setTimeout(function(){showBatchDiagnose();},600);
+    } else {
+      setTimeout(function(){loadBlind();},800);
+    }
+  } else {
+    wrongCount++;
+    document.getElementById('fb').innerHTML='Wrong. Diagnosing...';
+    document.getElementById('fb').className='feedback info';
+    // Send to AI for diagnosis
+    diagnoseWord(w, v);
+  }
+}
+
+async function diagnoseWord(w, attempt){
+  try{
+    var resp=await fetch(API+'/api/spelling/diagnose',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({word:w.word,cn:w.cn,attempt:attempt})
+    });
+    var result=await resp.json();
+    if(result.error_positions && result.error_positions.length>0){
+      mistakes.push({
+        word:w.word, cn:w.cn,
+        error_positions:result.error_positions,
+        drills:result.drills || [{blank_positions:result.error_positions,hint:''}],
+        attempt:attempt,
+        error_analysis:result.error_analysis || ''
+      });
+    }
+  }catch(e){
+    // Offline fallback: add mistake with basic info
+    if(w.word!==attempt){
+      mistakes.push({word:w.word,cn:w.cn,error_positions:[],drills:[{blank_positions:[],hint:''}],attempt:attempt});
+    }
+  }
+  document.getElementById('fb').innerHTML='Saved. Moving on...';
+  document.getElementById('fb').className='feedback good';
+  wIdx++;
+  // 检查是否到了本批末尾
+  var batchEnd=Math.min(batchStart+BATCH_SIZE, gameWords.length);
+  if(wIdx>=batchEnd && wIdx<gameWords.length){
+    setTimeout(function(){showBatchDiagnose();},400);
+  } else {
+    setTimeout(function(){loadBlind();},500);
+  }
+}
+
+/* ============================
+   DIAGNOSE SUMMARY (per batch)
+   ============================ */
+function showBatchDiagnose(){
+  // 把本批结果累计到总成绩
+  totalCorrect+=correctFirst;
+  totalWrong+=wrongCount;
+  // 显示本批诊断
+  showDiagnosePanel(true);
+}
+function showAllDiagnose(){
+  // 全部完成 — 显示完整总结
+  totalCorrect+=correctFirst;
+  totalWrong+=wrongCount;
+
+  // 如果有错题，先进入全部错题诊断+练习
+  if(mistakes.length>0){
+    showDiagnosePanel(false);
+  } else {
+    showAllFinish();
+  }
+}
+function showAllFinish(){
+  // 显示最终完成面板
+  document.getElementById('practicePanel').classList.remove('show');
+  document.getElementById('diagnosePanel').classList.remove('show');
+  document.getElementById('drillPanel').classList.remove('show');
+  document.getElementById('finishPanel').classList.remove('show');
+  document.getElementById('allFinishPanel').style.display='block';
+
+  var pct=gameWords.length>0?Math.round(totalCorrect/gameWords.length*100):0;
+  document.getElementById('allFinishIcon').textContent=pct>=80?'🏆':pct>=60?'🎉':'💪';
+  document.getElementById('allFinishTitle').textContent=pct>=80?'Excellent!':pct>=60?'Good Job!':'Keep Practicing!';
+  document.getElementById('afCorrect').textContent=totalCorrect;
+  document.getElementById('afWrong').textContent=totalWrong;
+  var stillWrong=0;
+  for(var i=0;i<mistakes.length;i++){
+    if(mistakes[i].error_positions && mistakes[i].error_positions.length>0) stillWrong++;
+  }
+  document.getElementById('afStill').textContent=stillWrong;
+  document.getElementById('allExtra').textContent='Completed '+gameWords.length+' words across all batches.';
+}
+function showDiagnosePanel(hasMore){
+  document.getElementById('practicePanel').classList.remove('show');
+  document.getElementById('diagnosePanel').classList.add('show');
+  document.getElementById('correctNum').textContent=correctFirst;
+  document.getElementById('wrongNum').textContent=mistakes.length;
+  document.getElementById('remainNum').textContent=(batchStart+BATCH_SIZE>gameWords.length?gameWords.length:batchStart+BATCH_SIZE)-batchStart-correctFirst;
+
+  // Show first mistake detail
+  if(mistakes.length>0){
+    var m=mistakes[0];
+    var analysis=m.error_analysis || (m.error_positions.length>0 ? 'Errors at positions: '+m.error_positions.join(', ') : 'Spelling incorrect');
+    document.getElementById('diagCard').innerHTML=
+      '<div class="word">'+m.word+'</div>'+
+      '<div class="analysis">You wrote: <b style="color:#FF6B35">'+m.attempt+'</b></div>'+
+      '<div class="analysis">'+analysis+'</div>'+
+      '<div class="errors">'+
+        (m.error_positions.map(function(p){
+          return '<span class="err-tag">Position '+(p+1)+': <b>'+m.word[p]+'</b></span>';
+        }).join(' '))+
+      '</div>';
+  } else {
+    document.getElementById('diagCard').innerHTML='<div style="text-align:center;padding:20px;font-size:16px">All words correct on first try! Well done!</div>';
+  }
+
+  // 继续按钮
+  var continueBtn=document.getElementById('continueBatchBtn');
+  var nextLabel=document.getElementById('nextBatchLabel');
+  var drillStartBtn=document.getElementById('drillStartBtn');
+  var retestBtn=document.getElementById('retestBtn');
+  if(hasMore){
+    // 还有下一批
+    continueBtn.style.display='inline-block';
+    continueBtn.textContent='Continue Next Batch ('+correctFirst+'/'+(batchStart+BATCH_SIZE>gameWords.length?gameWords.length:batchStart+BATCH_SIZE-batchStart)+')';
+    nextLabel.style.display='block';
+    drillStartBtn.style.display='none';
+    retestBtn.style.display='none';
+  } else {
+    // 全部完成
+    continueBtn.style.display='none';
+    nextLabel.style.display='none';
+    drillStartBtn.style.display='block';
+    retestBtn.style.display='block';
+  }
+}
+function continueNextBatch(){
+  // 累计总成绩
+  totalCorrect+=correctFirst;
+  totalWrong+=wrongCount;
+  // 重置本批计数
+  batchStart=wIdx;
+  correctFirst=0; wrongCount=0; mistakes=[];
+  document.getElementById('diagnosePanel').classList.remove('show');
+  document.getElementById('practicePanel').classList.add('show');
+  loadBlind();
+}
+
+/* ============================
+   DRILL PHASE: Targeted Blanks
+   ============================ */
+function startDrills(){
+  if(mistakes.length===0){goSetup();return;}
+  drillWords=[];
+  for(var i=0;i<mistakes.length;i++){
+    var m=mistakes[i];
+    if(m.drills && m.drills.length>0){
+      for(var j=0;j<m.drills.length;j++){
+        drillWords.push({
+          word:m.word, cn:m.cn,
+          blank_positions:m.drills[j].blank_positions || m.error_positions,
+          hint:m.drills[j].hint || ''
+        });
+      }
+    } else if(m.error_positions && m.error_positions.length>0){
+      drillWords.push({
+        word:m.word, cn:m.cn,
+        blank_positions:m.error_positions,
+        hint:''
+      });
+      // Also do a full blind retest
+      drillWords.push({
+        word:m.word, cn:m.cn,
+        blank_positions:[],
+        hint:'Final test: spell the whole word'
+      });
+    }
+  }
+  if(drillWords.length===0){goSetup();return;}
+  dIdx=0;
+  document.getElementById('diagnosePanel').classList.remove('show');
+  document.getElementById('drillPanel').classList.add('show');
+  loadDrill();
+}
+
+function loadDrill(){
+  if(dIdx>=drillWords.length){showFinish();return;}
+  var d=drillWords[dIdx];
+  currentDrill=d;
+  document.getElementById('drillCn').textContent=d.cn;
+  document.getElementById('drillFb').textContent=''; document.getElementById('drillFb').className='feedback';
+  document.getElementById('drillNext').classList.remove('show');
+  document.getElementById('drillPos').textContent=(dIdx+1)+'/'+drillWords.length;
+  document.getElementById('drillProg').style.width=((dIdx)/drillWords.length*100)+'%';
+
+  // Render slots
+  var word=d.word.replace(/[^a-zA-Z]/g,'').toLowerCase();
+  var blanks=d.blank_positions;
+  slots=blanks.slice();
+  slotValues=[];
+  slotAnswer='';
+  for(var i=0;i<blanks.length;i++){
+    slotValues.push('');
+    slotAnswer+=word[blanks[i]];
+  }
+
+  var area=document.getElementById('slotArea');
+  var h='<div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center">';
+  for(var i=0;i<word.length;i++){
+    if(blanks.indexOf(i)>=0){
+      h+='<input type="text" class="slot-box" id="slot_'+i+'" maxlength="1" autocomplete="off" '+
+        'oninput="onDrillSlot('+i+',this.value)" '+
+        'onkeydown="if(event.key===\'Enter\')focusNextSlot('+i+')">';
+    } else {
+      h+='<div style="width:36px;height:50px;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:700;color:#eee">'+word[i]+'</div>';
+    }
+  }
+  h+='</div>';
+  h+='<div style="margin-top:8px">'+
+    (d.hint?'<div style="font-size:13px;color:#999;margin-bottom:6px">'+d.hint+'</div>':'')+
+    '<button class="check-btn" id="checkDrillBtn" onclick="checkDrill()">Check</button></div>';
+  area.innerHTML=h;
+
+  setTimeout(function(){
+    var first=document.querySelector('.slot-box');
+    if(first) first.focus();
+  },100);
+  locked=false;
+}
+
+function onDrillSlot(idx,val){
+  val=val.toLowerCase().replace(/[^a-z]/g,'');
+  slotValues[idx]=val;
+  var el=document.getElementById('slot_'+idx);
+  if(el) el.value=val;
+}
+
+function focusNextSlot(idx){
+  var slots=document.querySelectorAll('.slot-box');
+  for(var i=0;i<slots.length;i++){
+    if(slots[i].id==='slot_'+idx && i<slots.length-1){
+      slots[i+1].focus(); break;
+    }
+  }
+}
+
+function checkDrill(){
+  if(locked) return;
+  var allFilled=true;
+  for(var i=0;i<slots.length;i++){
+    if(!slotValues[i]){allFilled=false;break;}
+  }
+  if(!allFilled){
+    document.getElementById('drillFb').textContent='Fill all blanks!';
+    document.getElementById('drillFb').className='feedback bad';
+    return;
+  }
+  locked=true;
+  document.getElementById('checkDrillBtn').disabled=true;
+
+  var userAns=''; for(var i=0;i<slots.length;i++) userAns+=slotValues[i];
+  var correct=(userAns===slotAnswer);
+  var fb=document.getElementById('drillFb');
+
+  if(correct){
+    for(var i=0;i<slots.length;i++){
+      var el=document.getElementById('slot_'+i);
+      if(el){el.classList.add('correct');el.disabled=true;}
+    }
+    fb.innerHTML='Correct!';
+    fb.className='feedback good';
+    setTimeout(function(){nextDrill();},600);
+  } else {
+    for(var i=0;i<slots.length;i++){
+      var el=document.getElementById('slot_'+i);
+      if(el && slotValues[i]!==slotAnswer[i]) el.classList.add('wrong');
+    }
+    fb.innerHTML='Try again! (Answer: '+slotAnswer+')';
+    fb.className='feedback bad';
+    setTimeout(function(){
+      for(var i=0;i<slots.length;i++){
+        var el=document.getElementById('slot_'+i);
+        if(el){el.classList.remove('wrong');el.value='';el.disabled=false;}
+        slotValues[i]='';
+      }
+      document.getElementById('checkDrillBtn').disabled=false;
+      locked=false;
+      var first=document.querySelector('.slot-box');
+      if(first) first.focus();
+    },1200);
+  }
+}
+
+function nextDrill(){
+  dIdx++; loadDrill();
+}
+
+/* ============================
+   FINISH
+   ============================ */
+function showFinish(){
+  document.getElementById('drillPanel').classList.remove('show');
+  document.getElementById('finishPanel').classList.add('show');
+  document.getElementById('fCorrect').textContent=correctFirst;
+  document.getElementById('fWrong').textContent=wrongCount;
+  // Count mistakes that had drills
+  var stillWrong=0;
+  for(var i=0;i<mistakes.length;i++){
+    if(mistakes[i].error_positions && mistakes[i].error_positions.length>0) stillWrong++;
+  }
+  document.getElementById('fStill').textContent=stillWrong;
+
+  var pct=gameWords.length>0?Math.round(correctFirst/gameWords.length*100):0;
+  document.getElementById('finishIcon').textContent=pct>=80?'🏆':pct>=60?'🎉':'💪';
+  document.getElementById('finishTitle').textContent=pct>=80?'Excellent!':pct>=60?'Good Job!':'Keep Practicing!';
+}
+
+/* ============================
+   SPEAK
+   ============================ */
+function speakWord(){
+  var word='';
+  if(currentWord) word=currentWord.word;
+  if(!word) return;
+  var btn=document.getElementById('speakBtn');
+  if(btn) btn.disabled=true;
+
+  // Use API-generated audio
+  var audio=new Audio(API+'/api/spelling/speak?word='+encodeURIComponent(word));
+  audio.onended=function(){if(btn)btn.disabled=false;};
+  audio.onerror=function(){
+    // Fallback to browser TTS
+    try{
+      window.speechSynthesis.cancel();
+      var u=new SpeechSynthesisUtterance(word);
+      u.lang='en-US';u.rate=0.8;
+      window.speechSynthesis.speak(u);
+    }catch(e){}
+    if(btn)btn.disabled=false;
+  };
+  audio.play().catch(function(){
+    try{
+      window.speechSynthesis.cancel();
+      var u=new SpeechSynthesisUtterance(word);
+      u.lang='en-US';u.rate=0.8;
+      window.speechSynthesis.speak(u);
+    }catch(e){}
+    if(btn)btn.disabled=false;
+  });
+}
+
+/* ============================
+   NAVIGATION
+   ============================ */
+function goSetup(){
+  document.getElementById('practicePanel').classList.remove('show');
+  document.getElementById('diagnosePanel').classList.remove('show');
+  document.getElementById('drillPanel').classList.remove('show');
+  document.getElementById('finishPanel').classList.remove('show');
+  document.getElementById('allFinishPanel').style.display='none';
+  document.getElementById('setupPanel').style.display='block';
+}
+
+/* ============================
+   KEYBOARD (for drill phase)
+   ============================ */
+(function(){
+  document.addEventListener('DOMContentLoaded',function(){
+    renderKeyboard();
+  });
+})();
+function renderKeyboard(){
+  var rows=[['q','w','e','r','t','y','u','i','o','p'],['a','s','d','f','g','h','j','k','l'],['z','x','c','v','b','n','m']];
+  var c=document.getElementById('keyboard'); var h='';
+  for(var r=0;r<rows.length;r++){
+    h+='<div class="kb-row">';
+    if(r===2) h+='<button class="kb-key sp" onclick="kbBack()">DEL</button>';
+    for(var k=0;k<rows[r].length;k++) h+='<button class="kb-key" onclick="kbChar(\''+rows[r][k]+'\')">'+rows[r][k]+'</button>';
+    if(r===1) h+='<button class="kb-key sp" onclick="kbBack()">DEL</button>';
+    if(r===2) h+='<button class="kb-key sp ok" onclick="checkDrill()">OK</button>';
+    h+='</div>';
+  }
+  c.innerHTML=h;
+}
+function kbChar(ch){
+  if(locked) return;
+  var f=document.activeElement;
+  if(f&&f.classList.contains('slot-box')){
+    f.value=ch; f.dispatchEvent(new Event('input',{bubbles:true}));
+    var all=document.querySelectorAll('.slot-box');
+    for(var i=0;i<all.length;i++){if(all[i]===f&&i<all.length-1){all[i+1].focus();break;}}
+  }else{
+    var first=document.querySelector('.slot-box');
+    if(first){first.value=ch;first.dispatchEvent(new Event('input',{bubbles:true}));}
+  }
+}
+function kbBack(){
+  if(locked) return;
+  var f=document.activeElement;
+  if(f&&f.classList.contains('slot-box')){
+    f.value=''; f.dispatchEvent(new Event('input',{bubbles:true}));
+    var all=document.querySelectorAll('.slot-box');
+    for(var i=0;i<all.length;i++){if(all[i]===f&&i>0){all[i-1].focus();break;}}
+  }
+}
+
+/* ============================
+   UTILITY
+   ============================ */
+function shuffle(a){
+  for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}
+}
+</script>
+<script src="data_u3.js"></script>
+<script src="data_u6.js"></script>
+<script src="data_u78.js"></script>
+</body>
+</html>
