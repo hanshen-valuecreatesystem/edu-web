@@ -1,0 +1,25 @@
+// 单词练习数据 — Unit 1: 日常作息 (28词)
+// 来源：教材照片
+var DATA_U1 = [
+  {id:'gu',word:'get up',cn:'起床',linkIcon:'',linkBridge:'',linkDetail:'',story:'',spellShow:'',spellTip:''},
+  {id:'hb',word:'have breakfast',cn:'吃早餐',linkIcon:'',linkBridge:'',linkDetail:'',story:'',spellShow:'',spellTip:''},
+  {id:'gs',word:'go to school',cn:'上学',linkIcon:'',linkBridge:'',linkDetail:'',story:'',spellShow:'',spellTip:''},
+  {id:'hl',word:'have lunch',cn:'吃午餐',linkIcon:'',linkBridge:'',linkDetail:'',story:'',spellShow:'',spellTip:''},
+  {id:'gh',word:'go home',cn:'回家',linkIcon:'',linkBridge:'',linkDetail:'',story:'',spellShow:'',spellTip:''},
+  {id:'hd',word:'have dinner',cn:'吃晚餐',linkIcon:'',linkBridge:'',linkDetail:'',story:'',spellShow:'',spellTip:''},
+  {id:'gb',word:'go to bed',cn:'睡觉',linkIcon:'',linkBridge:'',linkDetail:'',story:'',spellShow:'',spellTip:''},
+  {id:'da',word:'daily',cn:'每日的；日常的',linkIcon:'',linkBridge:'',linkDetail:'',story:'',spellShow:'',spellTip:''},
+  {id:'sc2',word:'schedule',cn:'日程安排',linkIcon:'',linkBridge:'',linkDetail:'',story:'',spellShow:'',spellTip:''},
+  {id:'at',word:'at',cn:'在（某时间或时刻）',linkIcon:'',linkBridge:'',linkDetail:'',story:'',spellShow:'',spellTip:''},
+  {id:'oc',word:"o'clock",cn:'（表示整点）……点钟',linkIcon:'',linkBridge:'',linkDetail:'',story:'',spellShow:'',spellTip:''},
+  {id:'ha',word:'half',cn:'（时间）……点半',linkIcon:'',linkBridge:'',linkDetail:'',story:'',spellShow:'',spellTip:''},
+  {id:'li',word:'little',cn:'年幼的',linkIcon:'',linkBridge:'',linkDetail:'',story:'',spellShow:'',spellTip:''},
+  {id:'dr',word:'drink',cn:'喝；饮',linkIcon:'',linkBridge:'',linkDetail:'',story:'',spellShow:'',spellTip:''},
+  {id:'le',word:'lesson',cn:'课',linkIcon:'',linkBridge:'',linkDetail:'',story:'',spellShow:'',spellTip:''},
+  {id:'dr2',word:'draw',cn:'画',linkIcon:'',linkBridge:'',linkDetail:'',story:'',spellShow:'',spellTip:''},
+  {id:'qu',word:'quarter',cn:'15分钟；一刻钟',linkIcon:'',linkBridge:'',linkDetail:'',story:'',spellShow:'',spellTip:''},
+  {id:'mi',word:'Miss',cn:'小姐',linkIcon:'',linkBridge:'',linkDetail:'',story:'',spellShow:'',spellTip:''},
+  {id:'bt',word:'brush my teeth',cn:'刷牙',linkIcon:'',linkBridge:'',linkDetail:'',story:'',spellShow:'',spellTip:''},
+  {id:'wf',word:'wash my face',cn:'洗脸',linkIcon:'',linkBridge:'',linkDetail:'',story:'',spellShow:'',spellTip:''},
+  {id:'gn',word:'Good night, kids!',cn:'晚安，孩子们！',linkIcon:'',linkBridge:'',linkDetail:'',story:'',spellShow:'',spellTip:''},
+];

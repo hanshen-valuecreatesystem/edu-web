@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎯 单词练习场</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Comic Sans MS','Microsoft YaHei',sans-serif;background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);color:#eee;padding:12px;display:flex;justify-content:center;min-height:100vh;}
+.wrap{max-width:780px;width:100%;}
+/* Header */
+.hd{text-align:center;padding:14px 0 6px;}
+.hd h1{font-size:1.6em;color:#FF6B35;letter-spacing:2px;}
+.hd .sub{color:#8899bb;font-size:.8em;margin-top:2px;}
+/* Unit tabs */
+.tabs{display:flex;gap:6px;margin:8px 0;}
+.tab{flex:1;padding:10px 6px;border-radius:10px;border:2px solid #533483;background:transparent;color:#8899bb;font-size:.85em;font-weight:bold;text-align:center;cursor:pointer;transition:all .2s;}
+.tab.on{border-color:#FF6B35;background:#533483;color:#fff;}
+.tab .cnt{display:block;font-size:.75em;color:#6677aa;margin-top:1px;}
+.tab.on .cnt{color:#ccc;}
+/* Stats */
+.stats{display:flex;justify-content:space-between;padding:4px 0;font-size:.78em;color:#667799;margin-bottom:6px;}
+.stats .right{text-align:right;}
+/* Card wall */
+.wall{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:6px 0;max-height:50vh;overflow-y:auto;padding:2px;}
+.crd{border-radius:12px;padding:10px;border:2px solid #333;background:#16213e;cursor:pointer;transition:all .2s;position:relative;}
+.crd.on{border-color:#FF6B35;background:#1a2a4e;}
+.crd.done{opacity:.7;border-color:#00B894;}
+.crd .ico{font-size:1.2em;margin-bottom:2px;}
+.crd .en{font-size:.82em;color:#FFD166;font-weight:bold;}
+.crd .cn{font-size:.72em;color:#8899bb;margin-top:1px;}
+.crd .badge{position:absolute;top:4px;right:4px;font-size:9px;padding:1px 5px;border-radius:6px;}
+.crd .badge.ok{background:#00B894;color:#fff;}
+.crd .badge.err{background:#E17055;color:#fff;}
+.crd .badge.pen{background:#FF6B35;color:#fff;}
+/* Action buttons */
+.acts{display:flex;gap:6px;margin:8px 0;flex-wrap:wrap;}
+.acts button{flex:1;min-width:80px;padding:10px;border:none;border-radius:10px;font-size:14px;cursor:pointer;font-weight:bold;transition:all .2s;}
+.acts .go{background:#FF6B35;color:#fff;}
+.acts .go:disabled{opacity:.4;cursor:default;}
+.acts .sel{background:#0f3460;color:#aaa;border:1px solid #333;}
+.acts .sel:hover{border-color:#FF6B35;color:#fff;}
+.acts .reset{background:#333;color:#888;}
+.acts .reset:hover{color:#E17055;}
+/* Practice area */
+.prac{background:#16213e;border-radius:14px;padding:14px;margin:4px 0;border:2px solid #533483;}
+.prac .head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.prac .head .lb{color:#FF6B35;font-size:.8em;}
+.prac .head .back{color:#667799;font-size:.78em;cursor:pointer;padding:4px 8px;border-radius:6px;}
+.prac .head .back:hover{background:#0f3460;color:#fff;}
+.rounds{display:flex;gap:6px;justify-content:center;margin:4px 0 8px;}
+.rounds .dot{width:10px;height:10px;border-radius:50%;background:#333;display:inline-block;}
+.rounds .dot.done{background:#00B894;}
+.rounds .dot.wrong{background:#E17055;}
+.rounds .dot.cur{background:#FF6B35;box-shadow:0 0 6px #FF6B35;}
+.rn{color:#aaa;font-size:.75em;text-align:center;margin-bottom:6px;}
+.cn{color:#FFD166;font-size:20px;text-align:center;margin:6px 0;font-weight:bold;}
+.blanks{font-size:26px;letter-spacing:4px;text-align:center;color:#FFD166;font-family:'Consolas',monospace;margin:6px 0;line-height:1.6;}
+.inp{margin:8px 0;}
+.inp input{width:100%;padding:12px;font-size:20px;border-radius:8px;border:2px solid #533483;background:#0a0a1e;color:#eee;outline:none;text-align:center;letter-spacing:2px;}
+.inp input:focus{border-color:#FF6B35;}
+.bts{display:flex;gap:6px;}
+.bts button{flex:1;padding:12px;border:none;border-radius:8px;font-size:15px;cursor:pointer;font-weight:bold;}
+.bts .ck{background:#FF6B35;color:#fff;}
+.bts .sk{background:#444;color:#aaa;}
+.bts .go{background:#00B894;color:#fff;}
+.bts .retry{background:#E17055;color:#fff;}
+/* Result area */
+.res{margin-top:6px;animation:fadeUp .3s;}
+.res .ans{font-size:1.4em;color:#FFD166;text-align:center;padding:4px 0;font-weight:bold;}
+.res .tips{background:#0f3460;border-radius:8px;padding:10px;margin:6px 0;}
+.res .tips .it{color:#8899bb;font-size:.78em;line-height:1.6;padding:2px 0;}
+.res .tips .it b{color:#FF6B35;}
+/* Finish */
+.fin{text-align:center;padding:20px;}
+.fin h2{color:#FFD166;font-size:22px;}
+.fin p{color:#8899bb;font-size:14px;margin:6px 0;}
+.fin .star{font-size:60px;margin:8px 0;}
+.fin .el{background:#0f3460;border-radius:8px;padding:10px;margin:8px 0;text-align:left;}
+.fin .el div{padding:3px 0;font-size:13px;border-bottom:1px solid #1a1a2e;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+/* scrollbar */
+.wall::-webkit-scrollbar{width:4px;}
+.wall::-webkit-scrollbar-track{background:#0f3460;border-radius:2px;}
+.wall::-webkit-scrollbar-thumb{background:#533483;border-radius:2px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="hd">
+  <h1>🎯 单词练习场</h1>
+  <div class="sub">Unit 3 · 职业 · Unit 6 · 时间 · Unit 7-8 · 物态/礼貌</div>
+</div>
+<div class="tabs" id="unitTabs"></div>
+<div class="stats" id="stats">
+  <span>📝 已选 <b id="selC">0</b> 词</span>
+  <span class="right">🏆 已攻克 <b id="doneC">0</b> · ⭐ 盲拼完成 <b id="starC">0</b></span>
+</div>
+<div class="wall" id="wall"></div>
+<div class="acts">
+  <button class="sel" onclick="selAll()">✅ 全选</button>
+  <button class="sel" onclick="selNone()">❌ 取消</button>
+  <button class="go" id="goBtn" onclick="startPractice()">📝 开始练习 (<span id="goC">0</span>)</button>
+  <button class="reset" onclick="resetUnit()">🔄 重置进度</button>
+</div>
+<div id="pracArea"></div>
+</div>
+
+<script src="data_u3.js"></script>
+<script src="data_u6.js"></script>
+<script src="data_u78.js"></script>
+<script>
+// ====== 单元配置 ======
+var UNITS = [
+  { id:'u3', label:'Unit 3', sub:'👨‍🚒 职业', data:DATA_U3 },
+  { id:'u6', label:'Unit 6', sub:'⏰ 时间', data:DATA_U6 },
+  { id:'u78', label:'Unit 7-8', sub:'🧪 物态·礼貌', data:DATA_U78 }
+];
+
+var curUnit = 0;         // 当前单元索引
+var words = [];          // 当前单元的数据（引用DATA_xx）
+var selIdx = {};         // 选中的索引: {0:true, 3:true, ...}
+var progress = {};       // localStorage进度
+var MAX_ROUND = 4;       // 4轮：70%→50%→30%→盲拼
+var R_LABEL = ['🟢 新手关','🔵 进阶关','🟡 高手关','🔴 盲拼'];
+var R_DESC = ['70%字母提示','50%字母提示','30%字母提示','全凭记忆'];
+
+// ====== localStorage ======
+function loadProg(){
+  try{ progress = JSON.parse(localStorage['wg_progress'] || '{}'); }
+  catch(e){ progress = {}; }
+}
+function saveProg(){
+  try{ localStorage['wg_progress'] = JSON.stringify(progress); } catch(e){}
+}
+function getWProg(unitId, wordId){
+  var p = progress[unitId];
+  if(!p) return null;
+  return p[wordId] || null;
+}
+function setWProg(unitId, wordId, data){
+  if(!progress[unitId]) progress[unitId] = {};
+  progress[unitId][wordId] = data;
+  saveProg();
+}
+
+// ====== 挖空 ======
+function makeBlanks(word, round){
+  var parts = word.split(' ');
+  var res = [];
+  for(var p=0; p<parts.length; p++){
+    var w = parts[p];
+    var k = [];
+    if(round===0){
+      var hide = Math.floor(w.length*0.3); if(hide<1) hide=1;
+      for(var i=0; i<w.length; i++) k.push(i<w.length-hide ? w[i] : '_');
+    }else if(round===1){
+      for(var i=0; i<w.length; i++) k.push(i===0||i===w.length-1 ? w[i] : (i%2===0?'_':w[i]));
+    }else if(round===2){
+      for(var i=0; i<w.length; i++) k.push(i===0 ? w[i] : '_');
+    }else{
+      for(var i=0; i<w.length; i++) k.push('_');
+    }
+    res.push(k.join(' '));
+  }
+  return res.join(' &nbsp;&nbsp; ');
+}
+
+// ====== 初始化 ======
+function init(){
+  loadProg();
+  renderTabs();
+  switchUnit(curUnit);
+}
+window.onload = init;
+
+function renderTabs(){
+  var h = '';
+  for(var i=0; i<UNITS.length; i++){
+    var u = UNITS[i];
+    var cls = i===curUnit ? 'tab on' : 'tab';
+    h += '<div class="'+cls+'" onclick="switchUnit('+i+')">'+u.label+'<span class="cnt">'+u.sub+'</span></div>';
+  }
+  document.getElementById('unitTabs').innerHTML = h;
+}
+
+function switchUnit(idx){
+  curUnit = idx;
+  renderTabs();
+  words = UNITS[idx].data;
+  selIdx = {};
+  // 默认全选未攻克的词
+  var ui = UNITS[idx].id;
+  for(var i=0; i<words.length; i++){
+    var wp = getWProg(ui, words[i].word);
+    if(!wp || wp.bestRound < 3) selIdx[i] = true;
+  }
+  renderWall();
+  updateStats();
+  document.getElementById('pracArea').innerHTML = '';
+}
+
+function renderWall(){
+  var ui = UNITS[curUnit].id;
+  var h = '';
+  for(var i=0; i<words.length; i++){
+    var w = words[i];
+    var wp = getWProg(ui, w.word);
+    var done = wp && wp.bestRound >= 3;
+    var bad = wp && wp.wrongCount > 0;
+    var cls = 'crd';
+    if(selIdx[i]) cls += ' on';
+    if(done) cls += ' done';
+    var badge = '';
+    if(done) badge = '<span class="badge ok">🏆已攻克</span>';
+    else if(bad) badge = '<span class="badge err">易错×'+wp.wrongCount+'</span>';
+    else badge = '<span class="badge pen">⭐待练</span>';
+    h += '<div class="'+cls+'" onclick="toggleSel('+i+')">'
+      + '<div class="ico">'+w.linkIcon+'</div>'
+      + '<div class="en">'+w.word+'</div>'
+      + '<div class="cn">'+w.cn+'</div>'
+      + badge
+      + '</div>';
+  }
+  document.getElementById('wall').innerHTML = h;
+}
+
+function updateStats(){
+  var c = 0;
+  for(var k in selIdx){ if(selIdx[k]) c++; }
+  document.getElementById('selC').textContent = c;
+  document.getElementById('goC').textContent = c;
+  document.getElementById('goBtn').disabled = (c===0);
+  // 统计攻克数
+  var ui = UNITS[curUnit].id;
+  var done = 0, stars = 0;
+  for(var i=0; i<words.length; i++){
+    var wp = getWProg(ui, words[i].word);
+    if(wp){
+      if(wp.bestRound >= 3) done++;
+      stars += wp.bestRound || 0;
+    }
+  }
+  document.getElementById('doneC').textContent = done;
+  document.getElementById('starC').textContent = stars;
+}
+
+function toggleSel(idx){
+  selIdx[idx] = !selIdx[idx];
+  renderWall();
+  updateStats();
+}
+
+function selAll(){
+  for(var i=0; i<words.length; i++){
+    var wp = getWProg(UNITS[curUnit].id, words[i].word);
+    if(!wp || wp.bestRound < 3) selIdx[i] = true;
+  }
+  renderWall(); updateStats();
+}
+
+function selNone(){
+  for(var k in selIdx) selIdx[k] = false;
+  renderWall(); updateStats();
+}
+
+function resetUnit(){
+  if(!confirm('重置'+UNITS[curUnit].label+'所有单词的进度？')) return;
+  var ui = UNITS[curUnit].id;
+  for(var i=0; i<words.length; i++) setWProg(ui, words[i].word, null);
+  renderWall(); updateStats();
+}
+
+// ====== 练习引擎 ======
+var pracWords = [];      // 选中的单词列表
+var pracIdx = 0;         // 当前词索引
+var pracRound = 0;       // 当前轮次
+var inPractice = false;
+
+function startPractice(){
+  // 收集选中的词
+  pracWords = [];
+  for(var i=0; i<words.length; i++){
+    if(selIdx[i]) pracWords.push(words[i]);
+  }
+  if(pracWords.length === 0){ alert('请先选择单词！'); return; }
+  pracIdx = 0;
+  pracRound = 0;
+  inPractice = true;
+  document.getElementById('wall').style.display = 'none';
+  document.querySelector('.acts').style.display = 'none';
+  renderPrac();
+}
+
+function exitPractice(){
+  inPractice = false;
+  document.getElementById('pracArea').innerHTML = '';
+  document.getElementById('wall').style.display = '';
+  document.querySelector('.acts').style.display = '';
+  renderWall();
+  updateStats();
+}
+
+function renderPrac(){
+  if(pracIdx >= pracWords.length){ showFinish(); return; }
+  var w = pracWords[pracIdx];
+  var ui = UNITS[curUnit].id;
+  var wp = getWProg(ui, w.word) || {wrongCount:0, bestRound:0};
+  var blanks = makeBlanks(w.word, pracRound);
+
+  // 圆点
+  var dots = '';
+  for(var i=0; i<MAX_ROUND; i++){
+    var dc = 'dot';
+    if(i < pracRound) dc += ' done';
+    else if(i === pracRound) dc += ' cur';
+    dots += '<span class="'+dc+'"></span>';
+  }
+
+  var h = '<div class="prac">';
+  h += '<div class="head"><span class="lb">'+(pracIdx+1)+'/'+pracWords.length+'</span>';
+  h += '<span class="back" onclick="exitPractice()">← 返回</span></div>';
+  h += '<div class="rounds">'+dots+'</div>';
+  h += '<div class="rn">'+R_LABEL[pracRound]+' — '+R_DESC[pracRound]+'</div>';
+  h += '<div class="cn">'+w.cn+'</div>';
+  h += '<div class="blanks">'+blanks+'</div>';
+  h += '<div class="inp"><input id="spIn" placeholder="在纸上写出，然后点检查..." autocomplete="off"></div>';
+  h += '<div class="bts"><button class="ck" onclick="checkSp()">✅ 检查</button><button class="sk" onclick="skipSp()">👀 跳过</button></div>';
+  h += '<div class="res" id="resArea"></div></div>';
+
+  document.getElementById('pracArea').innerHTML = h;
+  setTimeout(function(){ var el=document.getElementById('spIn'); if(el) el.focus(); }, 100);
+}
+
+function getPracW(){ return pracWords[pracIdx]; }
+
+function checkSp(){
+  var w = getPracW();
+  var inp = document.getElementById('spIn');
+  if(!inp) return;
+  var val = inp.value.trim().toLowerCase();
+  var corr = w.word.toLowerCase();
+  var hasNext = (pracRound < MAX_ROUND - 1);
+  var ui = UNITS[curUnit].id;
+  var wp = getWProg(ui, w.word) || {wrongCount:0, bestRound:0};
+
+  if(val === corr){
+    // 正确
+    wp.bestRound = Math.max(wp.bestRound, pracRound);
+    setWProg(ui, w.word, wp);
+    if(hasNext){
+      showRes('✅ 正确！', 'success', '🚀 下一轮（更少提示）', 'nextRound');
+    } else {
+      wp.bestRound = 3;
+      setWProg(ui, w.word, wp);
+      showRes('🎉 盲拼通过！', 'success', '👉 下一词', 'nextWord');
+    }
+  } else {
+    wp.wrongCount = (wp.wrongCount||0) + 1;
+    setWProg(ui, w.word, wp);
+    if(hasNext){
+      showRes('❌ 正确答案：<b>'+w.word+'</b> <span class="bdg" style="background:#E17055;color:#fff;border-radius:8px;padding:1px 6px;font-size:11px;">易错×'+wp.wrongCount+'</span>', 'error', '💪 记住了！再试一轮', 'nextRound');
+    } else {
+      showRes('❌ 正确答案：<b>'+w.word+'</b>', 'error', '👉 下一词', 'nextWord');
+    }
+  }
+}
+
+function skipSp(){
+  var w = getPracW();
+  var ui = UNITS[curUnit].id;
+  var wp = getWProg(ui, w.word) || {wrongCount:0, bestRound:0};
+  wp.wrongCount = (wp.wrongCount||0) + 1;
+  setWProg(ui, w.word, wp);
+  var hasNext = (pracRound < MAX_ROUND - 1);
+  if(hasNext){
+    showRes('👀 跳过 · <b>'+w.word+'</b>', 'skip', '🚀 下一轮', 'nextRound');
+  } else {
+    showRes('👀 跳过 · <b>'+w.word+'</b>', 'skip', '👉 下一词', 'nextWord');
+  }
+}
+
+function showRes(msg, type, btnText, btnFn){
+  var bg = type==='success' ? '#0f3460' : (type==='error' ? '#2a1a1e' : '#1a2030');
+  var uc = type==='success' ? '#00B894' : '#E17055';
+  var c = '';
+  if(type==='success') c = '#00B894';
+  else if(type==='error') c = '#E17055';
+  else c = '#aaa';
+
+  var h = '<div class="res" style="margin-top:8px;padding:10px;background:'+bg+';border-radius:8px;">';
+  h += '<div class="ans" style="color:'+c+';">'+msg+'</div>';
+  // 显示记忆方法
+  var w = getPracW();
+  h += '<div class="tips"><div class="it">🔗 <b>记忆桥梁</b> '+w.linkBridge+'</div>';
+  h += '<div class="it">📖 <b>故事</b> '+w.story.substring(0,60)+'…</div>';
+  h += '<div class="it">💡 <b>拼写</b> '+w.spellTip+'</div></div>';
+  // 如果错误，显示全部记忆方法
+  h += '<div class="bts"><button class="'+(type==='error'?'retry':'go')+'" onclick="'+btnFn+'()">'+btnText+'</button></div></div>';
+
+  document.getElementById('resArea').innerHTML = h;
+  var inp = document.getElementById('spIn');
+  if(inp) inp.disabled = true;
+}
+
+function nextRound(){
+  pracRound++;
+  renderPrac();
+}
+
+function nextWord(){
+  pracIdx++;
+  pracRound = 0;
+  renderPrac();
+}
+
+function showFinish(){
+  var errs = [];
+  var ui = UNITS[curUnit].id;
+  for(var i=0; i<pracWords.length; i++){
+    var wp = getWProg(ui, pracWords[i].word);
+    if(wp && wp.wrongCount > 0) errs.push({word:pracWords[i].word, cn:pracWords[i].cn, wrongCount:wp.wrongCount});
+  }
+  var done = pracWords.length - errs.length;
+  var h = '<div class="fin"><div class="star">'+(errs.length===0?'🏆':'🎉')+'</div>';
+  h += '<h2>'+(errs.length===0?'全部盲拼通过！':'练习完成！')+'</h2>';
+  h += '<p>'+done+'/'+pracWords.length+' 词盲拼通过';
+  if(errs.length>0) h+=' · <span style="color:#E17055;">'+errs.length+'个易错</span>';
+  h += '</p>';
+
+  if(errs.length>0){
+    h += '<div class="el">';
+    for(var i=0;i<errs.length;i++) h+='<div><b>'+errs[i].word+'</b> → '+errs[i].cn+' <span style="color:#E17055;">错×'+errs[i].wrongCount+'</span></div>';
+    h += '</div>';
+    h += '<div class="bts"><button class="retry" onclick="reviewErrs()" style="flex:1;">📖 复习错题</button>';
+    h += '<button class="go" onclick="exitPractice()" style="flex:1;">🏠 返回</button></div>';
+  } else {
+    h += '<div class="bts"><button class="go" onclick="exitPractice()" style="display:inline-block;width:auto;padding:12px 40px;">🏠 返回</button></div>';
+  }
+  h += '</div>';
+  document.getElementById('pracArea').innerHTML = h;
+}
+
+function reviewErrs(){
+  var ui = UNITS[curUnit].id;
+  var errs = [];
+  for(var i=0; i<words.length; i++){
+    var wp = getWProg(ui, words[i].word);
+    if(wp && wp.wrongCount > 0) errs.push(words[i]);
+  }
+  if(errs.length===0){ exitPractice(); return; }
+  pracWords = errs.slice();
+  for(var i=0; i<pracWords.length; i++) setWProg(ui, pracWords[i].word, {wrongCount:0, bestRound:0});
+  pracIdx = 0;
+  pracRound = 0;
+  renderPrac();
+}
+</script>
+</body>
+</html>
